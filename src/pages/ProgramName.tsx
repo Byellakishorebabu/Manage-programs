@@ -158,9 +158,9 @@ const ProgramDetails = () => {
     }
 
     return (
-        <div>
+        <div className="w-full">
 
-            <div className="p-6  mx-auto bg-white shadow-lg rounded-lg">
+            <div className="p-6   bg-white shadow-lg rounded-lg">
                 <div className="flex justify-between rounded-lg pb-4 flex ">
                     Student enrolled 256
                     <Button className="bg-blue-600 text-white" ><span><Pencil /></span>+ Edit program Details</Button>

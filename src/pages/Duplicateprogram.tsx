@@ -65,7 +65,7 @@ const CopyProgram = () => {
     };
 
     return (
-        <div className="p-6 max-w-xl mx-auto">
+        <div className="p-6 ">
             {/* <h2 className="text-xl font-bold mb-4">Copy Program</h2> */}
             <div>
                 {/* Editable Fields */}

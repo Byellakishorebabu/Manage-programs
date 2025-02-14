@@ -27,7 +27,7 @@
 //         setPrograms(storedPrograms);
 //     }, []);
 
-    
+
 
 
 //     const filterPrograms = (program) => {
@@ -174,9 +174,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight,Pencil, Copy } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Copy } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 // import { ChevronLeft, ChevronRight, Pencil, Copy } from "lucide-react";
+import AddStudent from "./AddStudent"
 
 const PAGE_SIZE = 5;
 const filterOptions = ["Program Name", "Status", "Program ID"];
@@ -199,24 +200,24 @@ const ProgramTable = () => {
     const [selectedCondition, setSelectedCondition] = useState("Contains");
     const [addedStudentName, setAddedStudentName] = useState("");
 
-    
+
     useEffect(() => {
-                const storedPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-                setPrograms(storedPrograms);
-            }, []);
-        
-                   
-            const filterPrograms = (program) => {
-                const value = search.toLowerCase();
-                const field = selectedFilter === "Program Name" ? program.name :
-                    selectedFilter === "Status" ? program.state :
-                        program.id.toString();
-        
-                if (selectedCondition === "Equals to") return field.toLowerCase() === value;
-                if (selectedCondition === "Starts with") return field.toLowerCase().startsWith(value);
-                if (selectedCondition === "Contains") return field.toLowerCase().includes(value);
-                return true;
-            };
+        const storedPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
+        setPrograms(storedPrograms);
+    }, []);
+
+
+    const filterPrograms = (program) => {
+        const value = search.toLowerCase();
+        const field = selectedFilter === "Program Name" ? program.name :
+            selectedFilter === "Status" ? program.state :
+                program.id.toString();
+
+        if (selectedCondition === "Equals to") return field.toLowerCase() === value;
+        if (selectedCondition === "Starts with") return field.toLowerCase().startsWith(value);
+        if (selectedCondition === "Contains") return field.toLowerCase().includes(value);
+        return true;
+    };
     // Sample students data
     const sampleStudents = [
         { id: 1, name: "sunny", email: "sunny@gmail.com" },
@@ -250,6 +251,7 @@ const ProgramTable = () => {
     );
     const totalPages = Math.ceil(filteredPrograms.length / PAGE_SIZE);
     const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const [selectedFilter, setSelectedFilter] = useState("Program Name");
 
@@ -279,7 +281,7 @@ const ProgramTable = () => {
         }
     };
 
-  
+
 
 
     return (
@@ -325,7 +327,7 @@ const ProgramTable = () => {
 
                 </div>
             </div>
-            
+
 
             <Table>
                 <TableHeader>
@@ -351,11 +353,26 @@ const ProgramTable = () => {
                                 </TableCell>
                                 <TableCell>{p.date}</TableCell>
                                 <TableCell>{p.org}</TableCell>
-                                <TableCell>{p.state}</TableCell>
+                                <TableCell className={`${p.state === "Active" ? "text-green-500" : "text-red-500"}`}>{p.state}</TableCell>
                                 <TableCell>
-                                    <Button onClick={() => openAddStudentPopup(p.id)} variant="outline">
-                                        Add
-                                    </Button>
+                                    <Button className="mt-4 border-none shadow-none" variant="outline" onClick={() => setIsPopupOpen(true)} >
+                                        Add             </Button>
+                                    {/* Popup Dialog */}
+                                    <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
+                                        <DialogContent className="fixed flex flex-col w-full h-max bg-white p-6">
+                                            <DialogTitle>Tag Student</DialogTitle>
+
+                                            {/* Render CourseSelection Component */}
+                                            <div className="flex-grow overflow-auto">
+                                                <AddStudent />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button variant="outline" onClick={() => setIsPopupOpen(false)}>
+                                                    Close
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
                                 </TableCell>
                                 <TableCell className="flex space-x-3">
                                     <Button variant="ghost" size="icon" onClick={() => navigate(`/EditProgram/${p.id}`)}>
@@ -414,20 +431,20 @@ const ProgramTable = () => {
                 </DialogContent>
             </Dialog>
             {totalPages > 1 && (
-                    <div className="flex justify-end items-center mt-6 space-x-2">
-                        <Button variant="ghost" disabled={page === 1} onClick={() => handlePageChange(page - 1)} >
-                            <ChevronLeft className="h-5 w-5" />
+                <div className="flex justify-end items-center mt-6 space-x-2">
+                    <Button variant="ghost" disabled={page === 1} onClick={() => handlePageChange(page - 1)} >
+                        <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    {[...Array(totalPages)].map((_, index) => (
+                        <Button key={index} variant={page === index + 1 ? "default" : "ghost"} onClick={() => handlePageChange(index + 1)}>
+                            {index + 1}
                         </Button>
-                        {[...Array(totalPages)].map((_, index) => (
-                            <Button key={index} variant={page === index + 1 ? "default" : "ghost"} onClick={() => handlePageChange(index + 1)}>
-                                {index + 1}
-                            </Button>
-                        ))}
-                        <Button variant="ghost" disabled={page === totalPages} onClick={() => handlePageChange(page + 1)}>
-                            <ChevronRight className="h-5 w-5" />
-                        </Button>
-                    </div>
-                )}
+                    ))}
+                    <Button variant="ghost" disabled={page === totalPages} onClick={() => handlePageChange(page + 1)}>
+                        <ChevronRight className="h-5 w-5" />
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };

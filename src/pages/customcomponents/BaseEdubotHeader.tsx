@@ -6,7 +6,7 @@ import Edubot from '../../assets/edubot_logo.svg';
 
 const BaseEdubotHeader: React.FC = () => {  
   return (
-    <header className="flex justify-start items-center p-3 bg-[#D3ECFD] border-b-2 border-b text-primary h-16">
+    <header className="flex justify-start items-center  bg-[#D3ECFD] border-b-2 border-b text-primary h-16">
       <img src={Edubot} alt="Logo" className="pl-6" />
       <Separator orientation="vertical" className='w-1 bg-primary mx-6 h-4/5' />
       <div className="text-lg font-medium flex-grow">Hello Kranthi, Welcome to Edubot LMS Platform</div>

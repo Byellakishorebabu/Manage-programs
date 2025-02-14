@@ -7,7 +7,7 @@ import BaseEdubotSidebar from './BaseEdubotSidebar';
 const BaseEdubotLayout: React.FC = () => {
   return (
       <div className="tw-flex tw-flex-col tw-h-screen">
-        <BaseEdubotHeader />
+        {/* <BaseEdubotHeader /> */}
         <div className="tw-flex tw-flex-1 tw-overflow-hidden">
           <BaseEdubotSidebar />
           <main className="tw-flex-1 tw-overflow-auto tw-p-6">

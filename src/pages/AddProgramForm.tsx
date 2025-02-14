@@ -57,7 +57,7 @@ const AddProgram = () => {
     };
 
     return (
-        <div className="p-6 max-w-xl mx-auto">
+        <div className="p-6 w-full">
             <h2 className="text-xl font-bold mb-4">Add Program</h2>
             <div>
                 <div className="mb-4">

@@ -66,7 +66,7 @@ const EditProgram = () => {
     };
 
     return (
-        <div className="p-6 max-w-xl mx-auto">
+        <div className="p-6 ">
             {/* <h2 className="text-xl font-bold mb-4">Edit Program</h2> */}
             <div>
                 <div className="mb-4">
