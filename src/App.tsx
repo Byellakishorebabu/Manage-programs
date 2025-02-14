@@ -4,6 +4,7 @@ import AddProgram from "./pages/AddProgramForm";
 import Editprogram from "./pages/Editprogram";
 import Duplicateprogram from "./pages/Duplicateprogram"
 import ProgramName from "./pages/ProgramName"
+import EditProgram from "./pages/EditProgram";
 // import CourseSelection from "./pages/CourseSelection";
 import BaseEdubotSidebar from "./pages/customcomponents/BaseEdubotSidebar";
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/Editprogram/:id" element={<DashboardLayout><Editprogram /></DashboardLayout>} />
         <Route path="/Duplicateprogram/:id" element={<DashboardLayout><Duplicateprogram/></DashboardLayout>} />
         <Route path="/ProgramName/:id" element={<DashboardLayout><ProgramName /></DashboardLayout>} />
+        <Route path="/edit-program/:id" element={<DashboardLayout><EditProgram /></DashboardLayout>} />
         {/* <Route path="/CourseSelection" element={<CourseSelection />} /> */}
       </Routes>
     </Router>

@@ -8,10 +8,30 @@ import { useNavigate, useParams } from "react-router-dom";
 import CourseSelection from "./CourseSelection";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
+interface Program {
+    id: string;
+    name: string;
+    description: string;
+    skillsGain: string;
+    duration: string;
+    courses: string;
+    date: string;
+    org: string;
+    state: string;
+    image?: string;
+}
+
+interface FormErrors {
+    programName?: string;
+    programID?: string;
+    skillsGain?: string;
+    duration?: string;
+}
+
 const EditProgram = () => {
-    const { id } = useParams(); // Get programID from URL
+    const { id } = useParams();
     const navigate = useNavigate();
-    
+
     const [programName, setProgramName] = useState("");
     const [programID, setProgramID] = useState("");
     const [description, setDescription] = useState("");
@@ -20,58 +40,116 @@ const EditProgram = () => {
     const [active, setActive] = useState(true);
     const [imageUploaded, setImageUploaded] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [initialValues, setInitialValues] = useState({
+        name: "",
+        description: "",
+        skillsGain: "",
+        duration: "",
+        active: true
+    });
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch copied program details
+        // Fetch program details from localStorage
         const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-        const program = existingPrograms.find((p: any) => p.id === id);
-        
+        const program = existingPrograms.find((p: Program) => p.id === id);
+
         if (program) {
             setProgramName(program.name);
             setProgramID(program.id);
-            setSkillsGain(program.skillsGain || "");
-            setDuration(program.duration || "");
+            setDescription(program.description);
+            setSkillsGain(program.skillsGain);
+            setDuration(program.duration);
             setActive(program.state === "Active");
+            
+            // Store initial values
+            setInitialValues({
+                name: program.name,
+                description: program.description,
+                skillsGain: program.skillsGain,
+                duration: program.duration,
+                active: program.state === "Active"
+            });
+
+            if (program.image) {
+                setImagePreview(program.image);
+                setImageUploaded(true);
+            }
         }
     }, [id]);
 
     const validate = () => {
-        let newErrors: any = {};
-        if (!programName) newErrors.programName = "Program Name is required";
-        if (!skillsGain) newErrors.skillsGain = "Skills Gain is required";
+        const newErrors: FormErrors = {};
+
+        if (!programName.trim()) newErrors.programName = "Program Name is required";
+        if (!skillsGain.trim()) newErrors.skillsGain = "Skills Gain is required";
         if (!duration) newErrors.duration = "Duration is required";
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith("image/")) {
+                alert("Only image files are allowed!");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result as string;
+                setImagePreview(base64String);
+                setImageUploaded(true);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = () => {
         if (!validate()) return;
 
-        const updatedProgram = {
+        const updatedProgram: Program = {
             id: programID,
             name: programName,
-            courses: "0", 
+            description: description,
+            skillsGain: skillsGain,
+            duration: duration,
+            courses: "0",
             date: new Date().toLocaleDateString(),
             org: "KLC Tech College",
             state: active ? "Active" : "Inactive",
+            image: imagePreview || undefined,
         };
 
-        // Update the program in localStorage
+        // Update program in localStorage
         const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-        const updatedPrograms = existingPrograms.map((p: any) => (p.id === id ? updatedProgram : p));
+        const updatedPrograms = existingPrograms.map((program: Program) =>
+            program.id === id ? updatedProgram : program
+        );
         localStorage.setItem("programs", JSON.stringify(updatedPrograms));
 
         setShowSuccessPopup(true);
     };
 
+    // Check if any values have changed
+    const hasChanges = () => {
+        return programName !== initialValues.name ||
+            description !== initialValues.description ||
+            skillsGain !== initialValues.skillsGain ||
+            duration !== initialValues.duration ||
+            active !== initialValues.active;
+    };
+
     return (
-        <div className="p-6 ">
-            {/* <h2 className="text-xl font-bold mb-4">Edit Program</h2> */}
+        <div className="p-6">
+            <h2 className="text-xl font-bold mb-4">Edit Program</h2>
             <div>
                 <div className="mb-4">
                     <Label htmlFor="programName">Program Name</Label>
-                    <Input 
+                    <Input
+                        id="programName"
                         placeholder="Program Name"
                         value={programName}
                         onChange={(e) => setProgramName(e.target.value)}
@@ -81,25 +159,29 @@ const EditProgram = () => {
 
                 <div className="mb-4">
                     <Label htmlFor="programID">Program ID</Label>
-                    <Input 
-                        placeholder="Program ID" 
-                        value={programID} 
-                        disabled 
+                    <Input
+                        id="programID"
+                        placeholder="Program ID"
+                        value={programID}
+                        disabled
+                        // onChange={(e) => setProgramID(e.target.value)}
                     />
                 </div>
 
                 <div className="mb-4">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Input 
-                        placeholder="Description" 
-                        value={description} 
-                        onChange={(e) => setDescription(e.target.value)} 
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                        id="description"
+                        placeholder="Description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                     />
                 </div>
 
                 <div className="mb-4">
                     <Label htmlFor="skillsGain">Skills Gain</Label>
-                    <Input 
+                    <Input
+                        id="skillsGain"
                         placeholder="Skills Gain"
                         value={skillsGain}
                         onChange={(e) => setSkillsGain(e.target.value)}
@@ -109,7 +191,7 @@ const EditProgram = () => {
 
                 <div className="flex items-center space-x-6">
                     <div className="w-1/2">
-                        <Select onValueChange={setDuration} defaultValue={duration}>
+                        <Select value={duration} onValueChange={setDuration}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Duration" />
                             </SelectTrigger>
@@ -122,10 +204,22 @@ const EditProgram = () => {
                         {errors.duration && <p className="text-red-500 text-sm">{errors.duration}</p>}
                     </div>
                     <div className="flex items-center space-x-4">
-                        <Checkbox checked={active} onCheckedChange={() => setActive(true)} />
-                        <span>Active</span>
-                        <Checkbox checked={!active} onCheckedChange={() => setActive(false)} />
-                        <span>Inactive</span>
+                        <label className="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                checked={active}
+                                onChange={() => setActive(true)}
+                            />
+                            <span>Active</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                checked={!active}
+                                onChange={() => setActive(false)}
+                            />
+                            <span>Inactive</span>
+                        </label>
                     </div>
                 </div>
 
@@ -133,22 +227,51 @@ const EditProgram = () => {
 
                 <div className="border p-4 rounded-md">
                     <label htmlFor="banner-upload" className="font-semibold block">Banner (Optional)</label>
-                    <input id="banner-upload" type="file" accept="image/*" className="mt-2" onChange={() => setImageUploaded(true)} />
-                    {imageUploaded && <span className="text-green-600"> Uploaded</span>}
+                    <input 
+                        id="banner-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="mt-2" 
+                        onChange={handleFileUpload} 
+                    />
+                    {imagePreview && (
+                        <div className="mt-2">
+                            <img 
+                                src={imagePreview} 
+                                alt="Preview" 
+                                className="max-w-xs h-auto"
+                            />
+                        </div>
+                    )}
                 </div>
 
-                <Button className="bg-[#1D1F71] text-white w-max mt-4" onClick={handleSubmit}>Update</Button>
+                <Button 
+                    className={`text-white w-max mt-4 ${
+                        hasChanges() ? "bg-[#1D1F71]" : "bg-orange-400 cursor-not-allowed"
+                    }`}
+                    onClick={handleSubmit}
+                    disabled={!hasChanges()}
+                >
+                    Update Program
+                </Button>
             </div>
 
-            {/* Success Popup */}
             {showSuccessPopup && (
                 <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
-                    <DialogContent className="text-center">
-                        <DialogTitle className="text-[#1D1F71]">Congratulation</DialogTitle>
-                        <p>We have successfully registered your program in data base you can go and visit later the detail of it!</p>
-                        <DialogFooter >
-                            <Button variant="outline" onClick={() => navigate("/programs")} className="border border-[#1D1F71] items-center">Back</Button>
-                            <Button onClick={() => setShowSuccessPopup(false)} className="bg-[#1D1F71] items-center">OK</Button>
+                    <DialogContent className="items-center">
+                        <DialogTitle><strong>Success</strong></DialogTitle>
+                        <p>Program has been updated successfully.</p>
+                        <DialogFooter>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setShowSuccessPopup(false);
+                                    navigate("/managerprogram");
+                                }}
+                                className="bg-[#1D1F71]"
+                            >
+                                Continue
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
