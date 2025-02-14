@@ -4,39 +4,26 @@ import { Input } from "../components/ui/input";
 import { X,  } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "../components/ui/dialog";
 
-const availablestudents = ["Sunny ", "Bhanu", "Ramu royal", "Sami", "Shankar","Shiva","Pardhu"];
-const defaultSelectedstudents = [" Ali ", "Teja"]; // Add default selected students here
-
-const studentSelection = () => {
-    const [successPopup, setSuccessPopup] = useState(false);
-    const [selectedstudents, setSelectedstudents] = useState<string[]>(defaultSelectedstudents);
-    const [filteredstudents, setFilteredstudents] = useState(
-        availablestudents.filter(student => !defaultSelectedstudents.includes(student))
+const availableCourses = ["Sunny ", "Bhanu", "Ramu royal", "Sami", "Shankar","Shiva","Pardhu"];
+const defaultSelectedCourses = [" Ali ", "Teja"]; // Add default selected courses here
+const CourseSelection = () => {
+    const [selectedCourses, setSelectedCourses] = useState<string[]>(defaultSelectedCourses);
+    const [filteredCourses, setFilteredCourses] = useState(
+        availableCourses.filter(course => !defaultSelectedCourses.includes(course))
     );
 
-const handlestudentSelect = (student: string) => {
-    setSelectedstudents([...selectedstudents, student]);
-    setFilteredstudents(filteredstudents.filter(c => c !== student));
-    };
-
-    // Success Popup Dialog
-    <Dialog open={successPopup} onOpenChange={setSuccessPopup}>
-        <DialogContent className="text-center">
-            <DialogTitle className="text-[#1D1F71] ">Added</DialogTitle>
-            <p>We have successfully added the student to the student Big Data Tools & Architecture.</p>
-            <DialogFooter>
-                <Button onClick={() => setSuccessPopup(false)} className="bg-[#1D1F71]">Continue</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-const handlestudentRemove = (student: string) => {
-    setFilteredstudents([...filteredstudents, student]);
-    setSelectedstudents(selectedstudents.filter(c => c !== student));
+const handleCourseSelect = (course: string) => {
+    setSelectedCourses([...selectedCourses, course]);
+    setFilteredCourses(filteredCourses.filter(c => c !== course));
 };
 
-const handleDragStart = (event: DragEvent<HTMLDivElement>, student: string) => {
-    event.dataTransfer.setData("text/plain", student);
+const handleCourseRemove = (course: string) => {
+    setFilteredCourses([...filteredCourses, course]);
+    setSelectedCourses(selectedCourses.filter(c => c !== course));
+};
+
+const handleDragStart = (event: DragEvent<HTMLDivElement>, course: string) => {
+    event.dataTransfer.setData("text/plain", course);
 };
 
 const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
@@ -45,22 +32,22 @@ const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
 
 const handleDrop = (event: DragEvent<HTMLDivElement>, isAdding: boolean) => {
     event.preventDefault();
-    const student = event.dataTransfer.getData("text/plain");
-    if (student) {
-        if (isAdding && !selectedstudents.includes(student)) {
-            handlestudentSelect(student);
-        } else if (!isAdding && !filteredstudents.includes(student)) {
-            handlestudentRemove(student);
+    const course = event.dataTransfer.getData("text/plain");
+    if (course) {
+        if (isAdding && !selectedCourses.includes(course)) {
+            handleCourseSelect(course);
+        } else if (!isAdding && !filteredCourses.includes(course)) {
+            handleCourseRemove(course);
         }
     }
 };
 
-// Filter students based on search input and exclude selected students
+// Update filteredCourses based on search input and exclude selected courses
 const handleSearch = (searchTerm: string) => {
-    setFilteredstudents(
-        availablestudents.filter(student =>
-            student.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !selectedstudents.includes(student)
+    setFilteredCourses(
+        availableCourses.filter(course =>
+            course.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !selectedCourses.includes(course)
         )
     );
 };
@@ -77,17 +64,17 @@ onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         }
                     />
                     <div className="border h-40 overflow-auto p-2 mt-2">
-                        {filteredstudents.map((student) => (
+                        {filteredCourses.map((course) => (
                             <div
-                                key={student}
+                                key={course}
                                 className="flex justify-between items-center p-2 border-b"
                                 draggable
-                                onDragStart={(e) => handleDragStart(e, student)}
+                                onDragStart={(e) => handleDragStart(e, course)}
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, false)}
                             >
-                                <span>{student}</span>
-                                <Button variant="ghost" onClick={() => handlestudentSelect(student)}>+</Button>
+                                <span>{course}</span>
+                                <Button variant="ghost" onClick={() => handleCourseSelect(course)}>+</Button>
                             </div>
                         ))}
                     </div>
@@ -95,20 +82,20 @@ onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 
                 <div className="w-1/2">
                     <span>Selected Students</span>
-                    <p className="text-sm text-gray-500">Drag to arrange the sequence of students.</p>
+                    <p className="text-sm text-gray-500">Drag to arrange the sequence of courses.</p>
                     <div className="border h-40 overflow-auto p-2 mt-2">
-                        {selectedstudents.length > 0 ? (
-                            selectedstudents.map((student) => (
+                        {selectedCourses.length > 0 ? (
+                            selectedCourses.map((course) => (
                             <div
-                                key={student}
+                                key={course}
                                 className="flex justify-between items-center p-2 border-b"
                                 draggable
-                                onDragStart={(e) => handleDragStart(e, student)}
+                                onDragStart={(e) => handleDragStart(e, course)}
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, true)}
                             >
-                                    <span>{student}</span>
-                                    <Button variant="ghost" onClick={() => handlestudentRemove(student)}>
+                                    <span>{course}</span>
+                                    <Button variant="ghost" onClick={() => handleCourseRemove(course)}>
                                         <X />
                                     </Button>
                                 </div>
@@ -124,4 +111,4 @@ onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
     );
 };
 
-export default studentSelection;
+export default CourseSelection;

@@ -204,7 +204,7 @@ const ProgramTable = () => {
     useEffect(() => {
         const storedPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
         setPrograms(storedPrograms);
-    }, []);
+    }, [localStorage.getItem("programs")]);
 
 
     const filterPrograms = (program) => {
