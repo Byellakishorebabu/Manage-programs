@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useNavigate } from "react-router-dom";
-import CourseSelection from "./CourseSelection";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, X } from "lucide-react";
+import CourseSelection from "./CourseSelection";
+
+const DB_KEY = "db_programs";
 
 const AddProgram = () => {
     const [programName, setProgramName] = useState("");
@@ -18,51 +20,110 @@ const AddProgram = () => {
     const [imageUploaded, setImageUploaded] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [errors, setErrors] = useState({});
-    const navigate = useNavigate();
+    const [courses, setCourses] = useState([]);
+    const [newCourse, setNewCourse] = useState("");
 
     const validate = () => {
-        let newErrors: any = {};
-        if (!programName) newErrors.programName = "Program Name is required";
-        if (!programID) newErrors.programID = "Program ID is required";
-        if (!skillsGain) newErrors.skillsGain = "Skills Gain is required";
+        let newErrors = {};
+        if (!programName.trim()) newErrors.programName = "Program Name is required";
+        if (!programID.match(/^\d+$/)) newErrors.programID = "Program ID should be a number";
+        if (!skillsGain.trim()) newErrors.skillsGain = "Skills Gain is required";
         if (!duration) newErrors.duration = "Duration is required";
+
+        const dbData = JSON.parse(localStorage.getItem(DB_KEY) || '{"programs": []}');
+        if (dbData.programs.some((program) => program.programID === programID)) {
+            newErrors.programID = "Program ID must be unique";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith("image/")) {
+                alert("Only image files are allowed!");
+                return;
+            }
+            setImageUploaded(true);
+        }
+    };
+
+    const handleAddCourse = () => {
+        if (newCourse.trim()) {
+            setCourses([...courses, newCourse.trim()]);
+            setNewCourse("");
+        }
+    };
+
+    const handleRemoveCourse = (index) => {
+        setCourses(courses.filter((_, i) => i !== index));
+    };
+
+    const resetForm = () => {
+        setProgramName("");
+        setProgramID("");
+        setDescription("");
+        setSkillsGain("");
+        setDuration("");
+        setActive(true);
+        setImageUploaded(false);
+        setCourses([]);
+        setErrors({});
     };
 
     const handleSubmit = () => {
         if (!validate()) return;
 
-        const newProgram = {
-            id: programID,
-            name: programName,
-            courses: "0", // Default courses count
-            date: new Date().toLocaleDateString(),
-            org: "KLC Tech College",
-            state: active ? "Active" : "Inactive",
-            student: (
-                <button 
-                    className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-                    onClick={() => handleStudentClick(programID)}
-                >
-                    Add
-                </button>
-            ),
+        // Create program data object
+        const programData = {
+            programID,
+            programName,
+            description,
+            skillsGain,
+            duration,
+            status: active ? "Active" : "Inactive",
+            imageUploaded,
+            createdDate: new Date().toISOString(),
+            organization: "KLC Tech College",
+            courses,
+            lastModified: new Date().toISOString()
         };
 
-        const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-        localStorage.setItem("programs", JSON.stringify([...existingPrograms, newProgram]));
+        // Get existing data from localStorage
+        const dbData = JSON.parse(localStorage.getItem(DB_KEY) || '{"programs": []}');
+        
+        // Add new program
+        dbData.programs.push(programData);
+        
+        // Update localStorage
+        localStorage.setItem(DB_KEY, JSON.stringify(dbData, null, 2));
 
         setShowSuccessPopup(true);
+        resetForm();
     };
 
+    const handleClose = () => {
+        setShowSuccessPopup(false);
+    };
+
+    // Initialize db.json structure if it doesn't exist
+    useEffect(() => {
+        const dbData = localStorage.getItem(DB_KEY);
+        if (!dbData) {
+            localStorage.setItem(DB_KEY, JSON.stringify({ programs: [] }, null, 2));
+        }
+    }, []);
+
     return (
-        <div className="p-6 w-full">
+        <div className="p-6 w-full max-w-3xl mx-auto">
             <h2 className="text-xl font-bold mb-4">Add Program</h2>
-            <div>
-                <div className="mb-4">
+            <div className="space-y-4">
+                <div>
                     <Label htmlFor="programName">Program Name</Label>
                     <Input
+                        id="programName"
                         placeholder="Program Name"
                         value={programName}
                         onChange={(e) => setProgramName(e.target.value)}
@@ -71,9 +132,10 @@ const AddProgram = () => {
                     {errors.programName && <p className="text-red-500 text-sm">{errors.programName}</p>}
                 </div>
 
-                <div className="mb-4">
+                <div>
                     <Label htmlFor="programID">Create Program ID</Label>
                     <Input
+                        id="programID"
                         placeholder="Create Program ID"
                         value={programID}
                         onChange={(e) => setProgramID(e.target.value)}
@@ -82,18 +144,20 @@ const AddProgram = () => {
                     {errors.programID && <p className="text-red-500 text-sm">{errors.programID}</p>}
                 </div>
 
-                <div className="mb-4">
+                <div>
                     <Label htmlFor="description">Description (Optional)</Label>
-                    <Input placeholder="Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <Input 
+                        id="description"
+                        placeholder="Description (Optional)" 
+                        value={description} 
+                        onChange={(e) => setDescription(e.target.value)} 
+                    />
                 </div>
-                {/* <div className="mb-4">
-                    <Label htmlFor="description">Organization</Label>
-                    <Input placeholder="Organization" value={} onChange={(e) => setDescription(e.target.value)} />
-                </div> */}
 
-                <div className="my-4">
+                <div>
                     <Label htmlFor="skillsGain">Skills Gain</Label>
                     <Input
+                        id="skillsGain"
                         placeholder="Skills Gain"
                         value={skillsGain}
                         onChange={(e) => setSkillsGain(e.target.value)}
@@ -116,189 +180,90 @@ const AddProgram = () => {
                         </Select>
                         {errors.duration && <p className="text-red-500 text-sm">{errors.duration}</p>}
                     </div>
+
                     <div className="flex items-center space-x-4">
-                        <Checkbox checked={active} onCheckedChange={() => setActive(true)} />
-                        <span>Active</span>
-                        <Checkbox checked={!active} onCheckedChange={() => setActive(false)} />
-                        <span>Inactive</span>
+                        <label className="flex items-center space-x-2">
+                            <input 
+                                type="radio" 
+                                checked={active} 
+                                onChange={() => setActive(true)} 
+                            />
+                            <span>Active</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                            <input 
+                                type="radio" 
+                                checked={!active} 
+                                onChange={() => setActive(false)} 
+                            />
+                            <span>Inactive</span>
+                        </label>
                     </div>
                 </div>
-
-                <CourseSelection />
+{/* Add courses practice */}
+                {/* <Card>
+                    <CardContent className="p-4">
+                        <Label>Courses</Label>
+                        <div className="flex space-x-2 mt-2">
+                            <Input
+                                placeholder="Add course"
+                                value={newCourse}
+                                onChange={(e) => setNewCourse(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleAddCourse()}
+                            />
+                            <Button onClick={handleAddCourse} size="icon">
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                            {courses.map((course, index) => (
+                                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                    <span>{course}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleRemoveCourse(index)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card> */}
+                <CourseSelection/>
 
                 <div className="border p-4 rounded-md">
                     <label htmlFor="banner-upload" className="font-semibold block">Banner (Optional)</label>
-                    <input id="banner-upload" type="file" accept="image/*" className="mt-2" onChange={() => setImageUploaded(true)} />
+                    <input 
+                        id="banner-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="mt-2" 
+                        onChange={handleFileUpload} 
+                    />
                     {imageUploaded && <span className="text-green-600"> Uploaded</span>}
                 </div>
 
-                <Button className="bg-blue-600 text-white w-full mt-4" onClick={handleSubmit}>Submit</Button>
+                <Button 
+                    className="w-full"
+                    onClick={handleSubmit}
+                >
+                    Submit
+                </Button>
             </div>
 
-            {/* Success Popup */}
-            {showSuccessPopup && (
-                <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
-                    <DialogContent>
-                        <DialogTitle>Success</DialogTitle>
-                        <p>Program added successfully!</p>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => navigate("/programs")}>Back</Button>
-                            <Button onClick={() => setShowSuccessPopup(false)}>OK</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+            <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
+                <DialogContent>
+                    <DialogTitle>Success</DialogTitle>
+                    <p>Program added successfully! The program data has been saved to the database.</p>
+                    <DialogFooter>
+                        <Button onClick={handleClose}>OK</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
 
 export default AddProgram;
-
-
-// import React, { useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-// import { Checkbox } from "@/components/ui/checkbox";
-// import CourseSelection from "./CourseSelection";
-// import { useNavigate } from "react-router-dom";
-// import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
-// const AddProgram = () => {
-//     const [programName, setProgramName] = useState("");
-//     const [programID, setProgramID] = useState("");
-//     const [description, setDescription] = useState("");
-//     const [skillsGain, setSkillsGain] = useState("");
-//     const [duration, setDuration] = useState("");
-//     const [active, setActive] = useState(true);
-//     const [imageUploaded, setImageUploaded] = useState(false);
-//     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-//     const [errors, setErrors] = useState({});
-//     const navigate = useNavigate();
-
-//     // Validation function
-//     const validate = () => {
-//         let newErrors: any = {};
-//         if (!programName) newErrors.programName = "Program Name is required";
-//         if (!programID) newErrors.programID = "Program ID is required";
-//         if (!skillsGain) newErrors.skillsGain = "Skills Gain is required";
-//         if (!duration) newErrors.duration = "Duration is required";
-//         setErrors(newErrors);
-//         return Object.keys(newErrors).length === 0;
-//     };
-
-//     // Handle form submission
-//     const handleSubmit = () => {
-//         if (!validate()) return;
-
-//         const newProgram = {
-//             id: programID,
-//             name: programName,
-//             skillsGain,
-//             duration,
-//             courses: "0",
-//             date: new Date().toLocaleDateString(),
-//             org: "KLC Tech College",
-//             description:"A description is added by optionally",
-//             state: active ? "Active" : "Inactive",
-//         };
-
-//         // Save to localStorage
-//         const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-//         const updatedPrograms = [...existingPrograms, newProgram];
-//         localStorage.setItem("programs", JSON.stringify(updatedPrograms));
-
-//         // Download JSON file
-//         // const blob = new Blob([JSON.stringify(updatedPrograms, null, 2)], { type: "application/json" });
-//         // const url = URL.createObjectURL(blob);
-//         // const a = document.createElement("a");
-//         // a.href = url;
-//         // a.download = "programs.json";
-//         // document.body.appendChild(a);
-//         // a.click();
-//         // document.body.removeChild(a);
-//         // URL.revokeObjectURL(url);
-
-//         // setShowSuccessPopup(true);
-//     };
-
-//     return (
-//         <div className="p-6 max-w-xl mx-auto">
-//             <h2 className="text-xl font-bold mb-4">Add Program</h2>
-//             <div>
-//                 <div className="mb-4">
-//                     <Label htmlFor="programName">Program Name</Label>
-//                     <Input placeholder="Program Name" value={programName} onChange={(e) => setProgramName(e.target.value)} />
-//                     {errors.programName && <p className="text-red-500 text-sm">{errors.programName}</p>}
-//                 </div>
-
-//                 <div className="mb-4">
-//                     <Label htmlFor="programID">Create Program ID</Label>
-//                     <Input placeholder="Create Program ID" value={programID} onChange={(e) => setProgramID(e.target.value)} />
-//                     {errors.programID && <p className="text-red-500 text-sm">{errors.programID}</p>}
-//                 </div>
-
-//                 <div className="mb-4">
-//                     <Label htmlFor="description">Description (Optional)</Label>
-//                     <Input placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-//                 </div>
-
-//                 <div className="my-4">
-//                     <Label htmlFor="skillsGain">Skills Gain</Label>
-//                     <Input placeholder="Skills Gain" value={skillsGain} onChange={(e) => setSkillsGain(e.target.value)} />
-//                     {errors.skillsGain && <p className="text-red-500 text-sm">{errors.skillsGain}</p>}
-//                 </div>
-
-//                 <div className="flex items-center space-x-6">
-//                     <div className="w-1/2">
-//                         <Select onValueChange={setDuration}>
-//                             <SelectTrigger className="w-full">
-//                                 <SelectValue placeholder="Select Duration" />
-//                             </SelectTrigger>
-//                             <SelectContent>
-//                                 <SelectItem value="3 Months">3 Months</SelectItem>
-//                                 <SelectItem value="6 Months">6 Months</SelectItem>
-//                                 <SelectItem value="1 Year">1 Year</SelectItem>
-//                             </SelectContent>
-//                         </Select>
-//                         {errors.duration && <p className="text-red-500 text-sm">{errors.duration}</p>}
-//                     </div>
-//                     <div className="flex items-center space-x-4">
-//                         <Checkbox checked={active} onCheckedChange={() => setActive(true)} />
-//                         <span>Active</span>
-//                         <Checkbox checked={!active} onCheckedChange={() => setActive(false)} />
-//                         <span>Inactive</span>
-//                     </div>
-//                 </div>
-//                 <div>
-//                     <CourseSelection />
-//                 </div>
-
-//                 <div className="border p-4 rounded-md">
-//                     <label htmlFor="banner-upload" className="font-semibold block">Banner (Optional)</label>
-//                     <input id="banner-upload" type="file" accept="image/*" className="mt-2" onChange={() => setImageUploaded(true)} />
-//                     {imageUploaded && <span className="text-green-600"> Uploaded</span>}
-//                 </div>
-
-//                 <Button className="bg-blue-600 text-white w-full mt-4" onClick={handleSubmit}>Submit</Button>
-//             </div>
-
-//             {/* Success Popup */}
-//             {showSuccessPopup && (
-//                 <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
-//                     <DialogContent>
-//                         <DialogTitle>Success</DialogTitle>
-//                         <p>Program added successfully!</p>
-//                         <DialogFooter>
-//                             <Button variant="ghost" onClick={() => navigate("/programs")}>Back</Button>
-//                             <Button onClick={() => setShowSuccessPopup(false)}>OK</Button>
-//                         </DialogFooter>
-//                     </DialogContent>
-//                 </Dialog>
-//             )}
-//         </div>
-//     );
-// };
-
-// export default AddProgram;

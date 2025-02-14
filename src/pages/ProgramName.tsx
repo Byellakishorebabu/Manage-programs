@@ -208,7 +208,7 @@ const ProgramDetails = () => {
                         ))}
                     </div>
                 </div>
-                <Button className="mt-4" onClick={() => setIsPopupOpen(true)}>
+                <Button className="mt-4 bg-[#1D1F71] hover:bg-[#484ab0]" onClick={() => setIsPopupOpen(true)}>
                     + Course             </Button>
                 {/* Popup Dialog */}
                 <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>

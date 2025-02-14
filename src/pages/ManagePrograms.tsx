@@ -252,6 +252,7 @@ const ProgramTable = () => {
     const totalPages = Math.ceil(filteredPrograms.length / PAGE_SIZE);
     const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const [selectedFilter, setSelectedFilter] = useState("Program Name");
 
@@ -355,8 +356,9 @@ const ProgramTable = () => {
                                 <TableCell>{p.org}</TableCell>
                                 <TableCell className={`${p.state === "Active" ? "text-green-500" : "text-red-500"}`}>{p.state}</TableCell>
                                 <TableCell>
-                                    <Button className="mt-4 border-none shadow-none" variant="outline" onClick={() => setIsPopupOpen(true)} >
-                                        Add             </Button>
+                                    <Button className="mt-4 border-none shadow-none" variant="outline" onClick={() => setIsPopupOpen(true)}  >
+                                        Add
+                                    </Button>
                                     {/* Popup Dialog */}
                                     <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
                                         <DialogContent className="fixed flex flex-col w-full h-max bg-white p-6">
@@ -367,12 +369,25 @@ const ProgramTable = () => {
                                                 <AddStudent />
                                             </div>
                                             <DialogFooter>
-                                                <Button variant="outline" onClick={() => setIsPopupOpen(false)}>
-                                                    Close
+                                                <Button variant="outline" className="bg-[#1D1F71]" onClick={() => setIsOpen(true)}>
+                                                    Add
                                                 </Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
+
+                                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                                        <DialogContent className="fixed flex flex-col w-full h-max bg-white p-6 text-center">
+                                            <DialogTitle className="text-[#1D1F71]">Added</DialogTitle>
+                                            We have successfully added the student to the course 
+                                            <DialogFooter className="flex justify-center">
+                                                <Button variant="outline" className="bg-[#1D1F71]" onClick={() => {setIsOpen(false); setIsPopupOpen(false)}}>
+                                                    continue
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+
                                 </TableCell>
                                 <TableCell className="flex space-x-3">
                                     <Button variant="ghost" size="icon" onClick={() => navigate(`/EditProgram/${p.id}`)}>
@@ -393,7 +408,7 @@ const ProgramTable = () => {
             </Table>
 
             {/* Add Student Dialog */}
-            <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
+            {/* <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
                 <DialogContent>
                     <DialogTitle>Select a Student</DialogTitle>
                     <Input
@@ -418,9 +433,9 @@ const ProgramTable = () => {
                         <Button onClick={() => setIsAddStudentOpen(false)} className="bg-[#1D1F71]" >Close</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
 
-            {/* Success Popup */}
+            {/* Success Popup
             <Dialog open={successPopup} onOpenChange={setSuccessPopup}>
                 <DialogContent className="text-center">
                     <DialogTitle className="text-[#1D1F71] ">Added</DialogTitle>
@@ -429,7 +444,7 @@ const ProgramTable = () => {
                         <Button onClick={() => setSuccessPopup(false)} className="bg-[#1D1F71]">Continue</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
             {totalPages > 1 && (
                 <div className="flex justify-end items-center mt-6 space-x-2">
                     <Button variant="ghost" disabled={page === 1} onClick={() => handlePageChange(page - 1)} >
