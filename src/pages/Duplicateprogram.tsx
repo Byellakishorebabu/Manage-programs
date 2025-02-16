@@ -28,7 +28,7 @@ interface Program {
   image?: string;
 }
 
-const CopyProgram = () => {
+const Duplicateprogram = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -66,7 +66,13 @@ const CopyProgram = () => {
     const validate = () => {
         const newErrors: FormErrors = {};
         if (!programName) newErrors.programName = "Program Name is required";
-        if (!programID) newErrors.programID = "Program ID is required";
+        if (!programID.trim()) {
+            newErrors.programID = "Program ID is required";
+        } else if (!/^\d+$/.test(programID)) {
+            newErrors.programID = "Program ID must be a number";
+        }else if (isNaN(Number(programID))) {
+            newErrors.programID = "Invalid number format";
+        }
         if (!skillsGain) newErrors.skillsGain = "Skills Gain is required";
         if (!duration) newErrors.duration = "Duration is required";
         setErrors(newErrors);
@@ -91,16 +97,25 @@ const CopyProgram = () => {
 
         // Save the copied program in localStorage
         const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
-        existingPrograms.push(copiedProgram);
-        localStorage.setItem("programs", JSON.stringify(existingPrograms));
 
+        // Find index of the program to update
+        const index = existingPrograms.findIndex(p => p.programID === copiedProgram.programID);
+        
+        if (index !== -1) {
+            // Update the existing program
+            existingPrograms[index] = { ...existingPrograms[index], ...copiedProgram };
+        } else {
+            newErrors.programID = "Program not found"; // Handle case where ID doesn't exist
+        }
+        
+        localStorage.setItem("programs", JSON.stringify(existingPrograms));
+        
         setShowSuccessPopup(true);
     };
 
     return (
         <div className="p-6">
             <div>
-                {/* Editable Fields */}
                 <div className="mb-4">
                     <Label htmlFor="programName">Program Name</Label>
                     <Input
@@ -118,12 +133,12 @@ const CopyProgram = () => {
                         id="programID"
                         placeholder="Program ID"
                         value={programID}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProgramID(e.target.value)}
+                        readOnly
+                        // onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProgramID(e.target.value)}
                     />
                     {errors.programID && <p className="text-red-500 text-sm">{errors.programID}</p>}
                 </div>
 
-                {/* Read-Only Fields */}
                 <div className="mb-4">
                     <Label htmlFor="description">Description </Label>
                     <Input
@@ -144,7 +159,8 @@ const CopyProgram = () => {
 
                 <div className="flex items-center space-x-6">
                     <div className="w-1/2">
-                        <Select defaultValue={duration} disabled>
+                    
+                        <Select value={duration} readOnly>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Duration" />
                             </SelectTrigger>
@@ -210,4 +226,4 @@ const CopyProgram = () => {
     );
 };
 
-export default CopyProgram;
+export default Duplicateprogram;

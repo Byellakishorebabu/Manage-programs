@@ -2,15 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-// import img1 from "@/assets/c1.png";
-// import img2 from "@/assets/c2.png";
-// import img3 from "@/assets/c3.png";
-import CourseSelection from "./CourseSelection";
+import { useNavigate } from "react-router-dom";
+
 import { Pencil } from "lucide-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
-// const images = [img1, img2, img3];
+import Coursedragdrop from "./Coursedragdrop";
 
 const courseData = [
     { id: "c1", name: "React Basics", modules: ["Introduction", "Components", "Props & State", "Hooks"] },
@@ -33,12 +30,16 @@ interface Program {
     image?: string;
 }
 
-const ProgramDetails = () => {
+const ProgramName = () => {
     const { id } = useParams();
     const [program, setProgram] = useState<Program | null>(null);
     const [openCourse, setOpenCourse] = useState<string | null>(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-
+    const navigate = useNavigate();
+    const paginatedPrograms = [program];
+    const handleEditClick = (programId: string) => {
+        navigate(`/editprogram/${programId}`);
+    };
     const toggleCourse = (courseId: string) => {
         setOpenCourse(openCourse === courseId ? null : courseId);
     };
@@ -61,10 +62,14 @@ const ProgramDetails = () => {
             <div className="p-6 bg-white shadow-lg rounded-lg">
                 <div className="flex justify-between rounded-lg pb-4">
                     <span>Student enrolled 256</span>
-                    <Button className="bg-blue-600 text-white">
-                        <Pencil className="mr-2" />
-                        Edit program Details
-                    </Button>
+                    {paginatedPrograms.map((p) => (
+                        <Button key={p.id} className="bg-[#141d71] text-white" onClick={() => handleEditClick(p.id)}>
+                            <Pencil className="mr-2" />
+                            Edit program Details
+                        </Button>
+                    )
+                    )}
+
                 </div>
 
                 <h2 className="text-2xl font-bold mb-4">{program.name}</h2>
@@ -74,21 +79,21 @@ const ProgramDetails = () => {
                 <Separator className="my-4" />
 
                 {program.image && (
-                    <img 
-                        src={program.image} 
-                        alt="Program" 
-                        className="w-max h-48 object-cover rounded-lg mb-4" 
+                    <img
+                        src={program.image}
+                        alt="Program"
+                        className="w-max h-48 object-cover rounded-lg mb-4"
                     />
                 )}
 
                 <p><strong>Date Created:</strong> {program.date}</p>
                 <p><strong>Organization:</strong> {program.org}</p>
                 <p><strong>Status:</strong> {program.state}</p>
-                
+
                 {program.description && (
                     <p className="pb-4">{program.description}</p>
                 )}
-                
+
                 <p><strong>Skills gain:</strong> {program.skillsGain}</p>
 
                 <Separator className="my-4" />
@@ -107,8 +112,8 @@ const ProgramDetails = () => {
                                     <span className="text-lg font-semibold">
                                         {index + 1}. {course.name}
                                     </span>
-                                    {openCourse === course.id ? 
-                                        <ChevronUp size={20} /> : 
+                                    {openCourse === course.id ?
+                                        <ChevronUp size={20} /> :
                                         <ChevronDown size={20} />
                                     }
                                 </div>
@@ -124,7 +129,7 @@ const ProgramDetails = () => {
                     </div>
                 </div>
 
-                <Button className="mt-4" onClick={() => setIsPopupOpen(true)}>
+                <Button className="mt-4 bg-[#141d71] text-white" onClick={() => setIsPopupOpen(true)}>
                     + Course
                 </Button>
 
@@ -133,11 +138,11 @@ const ProgramDetails = () => {
                     <DialogContent className="fixed flex flex-col w-full h-max bg-white p-6">
                         <DialogTitle>Course Selection</DialogTitle>
                         <div className="flex-grow overflow-auto">
-                            <CourseSelection />
+                            <Coursedragdrop />
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsPopupOpen(false)}>
-                                Close
+                            <Button onClick={() => setIsPopupOpen(false)} className="bg-[#1d1f71] hover:bg-[bg-[#1d1f]">
+                                Done
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -147,4 +152,4 @@ const ProgramDetails = () => {
     );
 };
 
-export default ProgramDetails;
+export default ProgramName;

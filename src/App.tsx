@@ -45,7 +45,7 @@ function App() {
         <Route path="/Editprogram/:id" element={<DashboardLayout><Editprogram /></DashboardLayout>} />
         <Route path="/Duplicateprogram/:id" element={<DashboardLayout><Duplicateprogram/></DashboardLayout>} />
         <Route path="/ProgramName/:id" element={<DashboardLayout><ProgramName /></DashboardLayout>} />
-        <Route path="/edit-program/:id" element={<DashboardLayout><EditProgram /></DashboardLayout>} />
+        <Route path="/editprogram/:id" element={<DashboardLayout><EditProgram /></DashboardLayout>} />
         {/* <Route path="/CourseSelection" element={<CourseSelection />} /> */}
       </Routes>
     </Router>

@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, useParams } from "react-router-dom";
 import CourseSelection from "./CourseSelection";
+// import Coursedragdrop from "./Coursedragdrop";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface Program {
-    id: string;
+    id: number;
     name: string;
     description: string;
     skillsGain: string;
@@ -23,7 +24,7 @@ interface Program {
 
 interface FormErrors {
     programName?: string;
-    programID?: string;
+    programID?: number;
     skillsGain?: string;
     duration?: string;
 }
@@ -62,7 +63,7 @@ const EditProgram = () => {
             setSkillsGain(program.skillsGain);
             setDuration(program.duration);
             setActive(program.state === "Active");
-            
+
             // Store initial values
             setInitialValues({
                 name: program.name,
@@ -85,7 +86,13 @@ const EditProgram = () => {
         if (!programName.trim()) newErrors.programName = "Program Name is required";
         if (!skillsGain.trim()) newErrors.skillsGain = "Skills Gain is required";
         if (!duration) newErrors.duration = "Duration is required";
-
+        if (!programID.trim()) {
+            newErrors.programID = "Program ID is required";
+        } else if (!/^\d+$/.test(programID)) {
+            newErrors.programID = "Program ID must be a number";
+        }else if (isNaN(Number(programID))) {
+            newErrors.programID = "Invalid number format";
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -163,8 +170,8 @@ const EditProgram = () => {
                         id="programID"
                         placeholder="Program ID"
                         value={programID}
-                        disabled
-                        // onChange={(e) => setProgramID(e.target.value)}
+                        readOnly
+                    // onChange={(e) => setProgramID(e.target.value)}
                     />
                 </div>
 
@@ -224,31 +231,33 @@ const EditProgram = () => {
                 </div>
 
                 <CourseSelection />
-
+                {/* <div className="pt-4">
+                    <span className="font-semibold ">Tag Courses </span>
+                    <Coursedragdrop />
+                </div> */}
                 <div className="border p-4 rounded-md">
                     <label htmlFor="banner-upload" className="font-semibold block">Banner (Optional)</label>
-                    <input 
-                        id="banner-upload" 
-                        type="file" 
-                        accept="image/*" 
-                        className="mt-2" 
-                        onChange={handleFileUpload} 
+                    <input
+                        id="banner-upload"
+                        type="file"
+                        accept="image/*"
+                        className="mt-2"
+                        onChange={handleFileUpload}
                     />
                     {imagePreview && (
                         <div className="mt-2">
-                            <img 
-                                src={imagePreview} 
-                                alt="Preview" 
+                            <img
+                                src={imagePreview}
+                                alt="Preview"
                                 className="max-w-xs h-auto"
                             />
                         </div>
                     )}
                 </div>
 
-                <Button 
-                    className={`text-white w-max mt-4 ${
-                        hasChanges() ? "bg-[#1D1F71]" : "bg-orange-400 cursor-not-allowed"
-                    }`}
+                <Button
+                    className={`text-white w-max mt-4 ${hasChanges() ? "bg-[#1D1F71]" : "bg-orange-400 cursor-not-allowed"
+                        }`}
                     onClick={handleSubmit}
                     disabled={!hasChanges()}
                 >

@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "../components/ui/table";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "../components/ui/dialog";
 import { ChevronLeft, ChevronRight, Pencil, Copy } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../components/ui/dropdown-menu";
 import AddStudent from "./AddStudent"
 
 const PAGE_SIZE = 5;
 const filterOptions = ["Program Name", "Status", "Program ID"];
 const conditionOptions = ["Equals to", "Starts with", "Contains"];
 
-const ProgramTable = () => {
+const ManagePrograms = () => {
     const navigate = useNavigate();
     const [programs, setPrograms] = useState<any[]>([]);
     const [students, setStudents] = useState<any[]>([]);
     const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
-    const [assignedStudents, setAssignedStudents] = useState<{ [key: number]: any[] }>({});
+    // const [assignedStudents, setAssignedStudents] = useState<{ [key: number]: any[] }>({});
 
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
@@ -25,11 +25,11 @@ const ProgramTable = () => {
 
     const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
     const [currentProgramId, setCurrentProgramId] = useState<number | null>(null);
-    const [successPopup, setSuccessPopup] = useState(false);
     const [selectedCondition, setSelectedCondition] = useState("Contains");
-    const [addedStudentName, setAddedStudentName] = useState("");
 
-    const [selectedFilter, setSelectedFilter] = useState("Program Name");
+    const [selectedFilter, setSelectedFilter] = useState("Filter ");
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
     useEffect(() => {
         const storedPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
@@ -72,24 +72,24 @@ const ProgramTable = () => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     // Open Add Student Popup
-    const openAddStudentPopup = (programId: number) => {
-        setCurrentProgramId(programId);
-        setIsAddStudentOpen(true);
-        setSearchStudent(""); // Reset search when opening modal
-        setFilteredStudents(students); // Reset filtered students
-    };
+    // const openAddStudentPopup = (programId: number) => {
+    //     setCurrentProgramId(programId);
+    //     setIsAddStudentOpen(true);
+    //     setSearchStudent(""); // Reset search when opening modal
+    //     setFilteredStudents(students); // Reset filtered students
+    // };
 
     // Add student to program
-    const handleAddStudent = (student: any) => {
-        if (currentProgramId === null) return;
+    // const handleAddStudent = (student: any) => {
+    //     if (currentProgramId === null) return;
 
-        setAssignedStudents(prev => ({
-            [currentProgramId]: [...(prev[currentProgramId] || []), student]
-        }));
+    //     setAssignedStudents(prev => ({
+    //         [currentProgramId]: [...(prev[currentProgramId] || []), student]
+    //     }));
 
-        setIsAddStudentOpen(false);
-        setSuccessPopup(true);
-    };
+    //     setIsAddStudentOpen(false);
+    //     setSuccessPopup(true);
+    // };
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -98,16 +98,16 @@ const ProgramTable = () => {
     };
 
     const handleEditClick = (programId: string) => {
-        navigate(`/edit-program/${programId}`);
+        navigate(`/editprogram/${programId}`);
     };
 
     return (
         <div className="p-4">
             <div className="flex justify-between ">
-                <div className="flex items-center mb-4">
-                    <DropdownMenu className="">
+                <div className="flex items-center mb-4 space-x-4">
+                    <DropdownMenu >
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline">{selectedFilter}</Button>
+                            <Button variant="outline" className="border border-[#1d1f71] ">{selectedFilter}</Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             {filterOptions.map((option) => (
@@ -120,11 +120,11 @@ const ProgramTable = () => {
 
                     <DropdownMenu >
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline">{selectedCondition}</Button>
+                            <Button variant="outline" className="border border-[#1d1f71] ">{selectedCondition}</Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             {conditionOptions.map((option) => (
-                                <DropdownMenuItem key={option} onClick={() => setSelectedCondition(option)}>
+                                <DropdownMenuItem key={option.toLowerCase()} onClick={() => setSelectedCondition(option)}>
                                     {option}
                                 </DropdownMenuItem>
                             ))}
@@ -140,7 +140,7 @@ const ProgramTable = () => {
 
                 </div>
                 <div className="flex">
-                    <Button className="bg-blue-600 text-white" onClick={() => navigate("/AddProgramForm")}>+ Add Program</Button>
+                    <Button className="bg-[#1d1f71] text-white" onClick={() => navigate("/AddProgramForm")}>+ Add Program</Button>
 
                 </div>
             </div>
@@ -173,30 +173,35 @@ const ProgramTable = () => {
                                 <TableCell>
                                     <Button className="mt-4 border-none shadow-none" variant="outline" onClick={() => setIsPopupOpen(true)} >
                                         Add             </Button>
-                                    {/* Popup Dialog */}
+                                    {/* Popup */}
                                     <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
                                         <DialogContent className="fixed flex flex-col w-full h-max bg-white p-6">
                                             <DialogTitle>Tag Student</DialogTitle>
-
-                                            {/* Render CourseSelection Component */}
                                             <div className="flex-grow overflow-auto">
-                                                <AddStudent />
+                                                <AddStudent onValidityChange={setIsFormValid} />
                                             </div>
                                             <DialogFooter>
-                                                <Button variant="outline" onClick={() => setIsPopupOpen(false)}>
-                                                    Close
+                                                <Button 
+                                                    className="bg-[#1d1f71] text-white" 
+                                                    onClick={() => {
+                                                        setIsPopupOpen(false);
+                                                        setShowSuccessPopup(true);
+                                                    }}
+                                                    disabled={!isFormValid}
+                                                >
+                                                    Add
                                                 </Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
                                 </TableCell>
                                 <TableCell className="flex space-x-3">
-                                    <button
+                                    <Button
                                         onClick={() => handleEditClick(p.id)}
-                                        className="text-blue-600 hover:text-blue-800 mr-2"
+                                        className="text-blue-600 hover:text-blue-800 mr-2  " variant="outline" 
                                     >
                                         <Pencil className="h-5 w-5" />
-                                    </button>
+                                    </Button>
                                     <Button variant="ghost" size="icon" onClick={() => navigate(`/DuplicateProgram/${p.id}`)}>
                                         <Copy className="h-5 w-5 text-green-600" />
                                     </Button>
@@ -212,7 +217,7 @@ const ProgramTable = () => {
             </Table>
 
             {/* Add Student Dialog */}
-            <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
+            {/* <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
                 <DialogContent>
                     <DialogTitle>Select a Student</DialogTitle>
                     <Input
@@ -234,28 +239,38 @@ const ProgramTable = () => {
                         )}
                     </div>
                     <DialogFooter>
-                        <Button onClick={() => setIsAddStudentOpen(false)} className="bg-[#1D1F71]" >Close</Button>
+                        <Button onClick={() => setIsAddStudentOpen(false)} className="bg-[#1D1F71]" >Add</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog> */}
 
             {/* Success Popup */}
-            <Dialog open={successPopup} onOpenChange={setSuccessPopup}>
-                <DialogContent className="text-center">
-                    <DialogTitle className="text-[#1D1F71] ">Added</DialogTitle>
-                    <p>We have successfully added the student to the course Big Data Tools & Architecture.</p>
+
+            { programs.map((p) => (
+            <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
+           {/* { paginatedPrograms.map((p) => ( */}
+                <DialogContent key={p.name} className="text-center">
+                    <DialogTitle className="text-[#1D1F71]">Success!</DialogTitle>
+                    <p>Student has been successfully added to the program <span className="font-semibold">{p.name}</span></p>
                     <DialogFooter>
-                        <Button onClick={() => setSuccessPopup(false)} className="bg-[#1D1F71]">Continue</Button>
+                        <Button 
+                            onClick={() => setShowSuccessPopup(false)} 
+                            className="bg-[#1D1F71] text-white"
+                        >
+                            Continue
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
+            
             </Dialog>
+            )) }
             {totalPages > 1 && (
                 <div className="flex justify-end items-center mt-6 space-x-2">
                     <Button variant="ghost" disabled={page === 1} onClick={() => handlePageChange(page - 1)} >
                         <ChevronLeft className="h-5 w-5" />
                     </Button>
                     {[...Array(totalPages)].map((_, index) => (
-                        <Button key={index} variant={page === index + 1 ? "default" : "ghost"} onClick={() => handlePageChange(index + 1)}>
+                        <Button key={index.id} variant={page === index + 1 ? "default" : "ghost"} onClick={() => handlePageChange(index + 1)}>
                             {index + 1}
                         </Button>
                     ))}
@@ -268,4 +283,4 @@ const ProgramTable = () => {
     );
 };
 
-export default ProgramTable;
+export default ManagePrograms;

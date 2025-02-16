@@ -3,14 +3,14 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { X } from "lucide-react";
 
-const availableCourses = ["Sunny ", "Bhanu", "Ramu royal", "Sami", "Shankar", "Shiva", "Pardhu"];
+const availableCourses = ["Course A", "Course B", "Course C", "Course D", "Course E "];
 const defaultSelectedCourses: string[] = []; // Changed to empty array initially
 
-interface AddStudentProps {
+interface CourseDragProps {
     onValidityChange: (isValid: boolean) => void;
 }
 
-const AddStudent = ({ onValidityChange }: AddStudentProps) => {
+const Coursedragdrop = ({ onValidityChange }: CourseDragProps) => {
     const [selectedCourses, setSelectedCourses] = useState<string[]>(defaultSelectedCourses);
     const [filteredCourses, setFilteredCourses] = useState(availableCourses);
 
@@ -32,7 +32,7 @@ const AddStudent = ({ onValidityChange }: AddStudentProps) => {
         <div>
             <div className="flex space-x-4 border p-4 rounded-md">
                 <div className="w-1/2">
-                    <span>Students to Select</span>
+                    <span>Courses to Select</span>
                     <Input
                         placeholder="Search student..."
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -61,11 +61,11 @@ const AddStudent = ({ onValidityChange }: AddStudentProps) => {
                 </div>
 
                 <div className="w-1/2">
-                    <span>Selected Students</span>
+                    <span>Selected Courses</span>
                     <p className="text-sm text-gray-500">
                         {selectedCourses.length > 0 
-                            ? `${selectedCourses.length} student(s) selected` 
-                            : 'Please select at least one student'}
+                            ? `${selectedCourses.length} Course(s) selected` 
+                            : 'Please select at least one Courses'}
                     </p>
                     <div className="border h-40 overflow-auto p-2 mt-2">
                         {selectedCourses.length > 0 ? (
@@ -84,7 +84,7 @@ const AddStudent = ({ onValidityChange }: AddStudentProps) => {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-center text-gray-500">No students are selected</p>
+                            <p className="text-center text-gray-500">No courses are selected</p>
                         )}
                     </div>
                 </div>
@@ -93,4 +93,4 @@ const AddStudent = ({ onValidityChange }: AddStudentProps) => {
     );
 };
 
-export default AddStudent;
+export default Coursedragdrop;
