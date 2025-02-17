@@ -188,7 +188,8 @@ const ProgramTable = () => {
     const [programs, setPrograms] = useState<any[]>([]);
     const [students, setStudents] = useState<any[]>([]);
     const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
-    const [assignedStudents, setAssignedStudents] = useState<{ [key: number]: any[] }>({});
+    const [filteredPrograms, setFilteredPrograms] = useState<any[]>([]);
+    // const [assignedStudents, setAssignedStudents] = useState<{ [key: number]: any[] }>({});
 
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
@@ -200,11 +201,59 @@ const ProgramTable = () => {
     const [selectedCondition, setSelectedCondition] = useState("Contains");
     const [addedStudentName, setAddedStudentName] = useState("");
 
+    const [selectedFilter, setSelectedFilter] = useState("Filter ");
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+    // Function to filter programs based on selected criteria
+    const filterPrograms = (programs: any[], selectedFilter: string, selectedCondition: string, searchValue: string) => {
+        if (!searchValue || searchValue.trim() === '') {
+            return programs;
+        }
+
+        return programs.filter(program => {
+            let fieldValue = '';
+            
+            // Determine which field to compare based on selectedFilter
+            switch (selectedFilter) {
+                case 'Program Name':
+                    fieldValue = program.name;
+                    break;
+                case 'Status':
+                    fieldValue = program.state;
+                    break;
+                case 'Program ID':
+                    fieldValue = String(program.id);
+                    break;
+                default:
+                    return true; // If no filter is selected, include all programs
+            }
+
+            // Convert to lowercase for case-insensitive comparison
+            const lowerFieldValue = fieldValue.toLowerCase();
+            const lowerSearchValue = searchValue.toLowerCase();
+            
+            // Apply the selected condition
+            switch (selectedCondition) {
+                case 'Equals to':
+                    return lowerFieldValue === lowerSearchValue;
+                case 'Starts with':
+                    return lowerFieldValue.startsWith(lowerSearchValue);
+                case 'Contains':
+                    return lowerFieldValue.includes(lowerSearchValue);
+                default:
+                    return false;
+            }
+        });
+    };
+
+    // Load programs from local storage
     useEffect(() => {
         const storedPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
         setPrograms(storedPrograms);
-    }, [localStorage.getItem("programs")]);
+        setFilteredPrograms(storedPrograms); // Initialize filteredPrograms
+    }, []);
 
 
     const filterPrograms = (program) => {
@@ -227,11 +276,6 @@ const ProgramTable = () => {
         { id: 5, name: "steve", email: "steve@gmail.com" }
     ];
 
-    // Load programs from local storage
-    useEffect(() => {
-        setPrograms(JSON.parse(localStorage.getItem("programs") || "[]"));
-    }, []);
-
     // Load students from sample data
     useEffect(() => {
         setStudents(sampleStudents);
@@ -245,16 +289,24 @@ const ProgramTable = () => {
         ));
     }, [searchStudent, students]);
 
-    // Pagination
-    const filteredPrograms = programs.filter(program =>
-        program.name.toLowerCase().includes(search.toLowerCase())
-    );
+    // Update filtered programs when filter criteria change
+    useEffect(() => {
+        // Only apply complex filtering if a filter option is selected
+        if (selectedFilter !== 'Filter ') {
+            const filtered = filterPrograms(programs, selectedFilter, selectedCondition, search);
+            setFilteredPrograms(filtered);
+        } else {
+            // Simple search behavior (default)
+            const filtered = programs.filter(program =>
+                program.name.toLowerCase().includes(search.toLowerCase())
+            );
+            setFilteredPrograms(filtered);
+        }
+    }, [search, programs, selectedFilter, selectedCondition]);
+
+    // Pagination calculation using filtered programs
     const totalPages = Math.ceil(filteredPrograms.length / PAGE_SIZE);
     const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-    const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
-
-    const [selectedFilter, setSelectedFilter] = useState("Program Name");
 
     // Open Add Student Popup
     const openAddStudentPopup = (programId: number) => {
@@ -276,14 +328,22 @@ const ProgramTable = () => {
         setSuccessPopup(true);
     };
 
-    const handlePageChange = (newPage) => {
+    const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
         }
     };
 
+    const handleEditClick = (programId: string) => {
+        navigate(`/editprogram/${programId}`);
+    };
 
-
+    const handleAddStudents = (programId: string) => {
+        if (!isFormValid) return;
+        
+        setIsPopupOpen(false);
+        setShowSuccessPopup(true);
+    };
 
     return (
         <div className="p-4">
@@ -331,8 +391,8 @@ const ProgramTable = () => {
 
 
             <Table>
-                <TableHeader>
-                    <TableRow className="bg-[#FFDF9B]">
+                <TableHeader className="bg-[#FFDF9B] border-b transition-colors !hover:bg-muted/50 data-[state=selected]:bg-muted !hover:bg-none" >
+                    <TableRow className="bg-[#FFDF9B] !border-b !transition-colors-none !muted-[#FFDF9B] !data-[state=selected]:bg-muted !hover:bg-none"   >
                         <TableCell>Program ID</TableCell>
                         <TableCell>Program Name</TableCell>
                         <TableCell>Date Created</TableCell>
@@ -369,7 +429,11 @@ const ProgramTable = () => {
                                                 <AddStudent />
                                             </div>
                                             <DialogFooter>
-                                                <Button variant="outline" className="bg-[#1D1F71]" onClick={() => setIsOpen(true)}>
+                                                <Button 
+                                                    className="bg-[#1d1f71] text-white" 
+                                                    onClick={handleAddStudents}
+                                                    disabled={!isFormValid}
+                                                >
                                                     Add
                                                 </Button>
                                             </DialogFooter>
@@ -464,4 +528,4 @@ const ProgramTable = () => {
     );
 };
 
-export default ProgramTable;
+export default ManagePrograms;

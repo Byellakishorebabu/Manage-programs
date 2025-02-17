@@ -6,9 +6,37 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useNavigate } from "react-router-dom";
 import CourseSelection from "./CourseSelection";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { X, } from "lucide-react";
 
+interface Program {
+    id: string;
+    name: string;
+    description: string;
+    skillsGain: string;
+    duration: string;
+    courses: string;
+    date: string;
+    org: string;
+    state: string;
+    image?: string;
+    selectedCourses: string[];
+}
 
-const AddProgram = () => {
+interface FormErrors {
+    programName?: string;
+    programID?: string;
+    skillsGain?: string;
+    duration?: string;
+    course?: string;
+    description?: string;
+    imageUploaded?: string;
+
+}
+
+const availableCourses = ["Course A", "Course B", "Course C", "Course D", "Course E"];
+const defaultSelectedCourses = []; // Add default selected courses here
+
+const AddProgramForm = () => {
     const [programName, setProgramName] = useState("");
     const [programID, setProgramID] = useState("");
     const [description, setDescription] = useState("");
@@ -20,10 +48,92 @@ const AddProgram = () => {
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
 
+
+    const [draggedCourse, setDraggedCourse] = useState<string | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [selectedCourses, setSelectedCourses] = useState<string[]>(defaultSelectedCourses);
+    const [filteredCourses, setFilteredCourses] = useState(
+        availableCourses.filter(course => !defaultSelectedCourses.includes(course))
+    );
+
+    const handleCourseSelect = (course: string) => {
+        setSelectedCourses([...selectedCourses, course]);
+        setFilteredCourses(filteredCourses.filter(c => c !== course));
+    };
+
+
+    
+    
+
+    const handleDragStart = (event: React.DragEvent<HTMLDivElement>, course: string, fromSelected: boolean = false) => {
+        event.dataTransfer.setData("text/plain", course);
+        event.dataTransfer.setData("fromSelected", String(fromSelected));
+        setDraggedCourse(course);
+    };
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>, index?: number) => {
+        event.preventDefault();
+        if (index !== undefined) {
+            setDragOverIndex(index);
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>, isSelectedArea: boolean, dropIndex?: number) => {
+        event.preventDefault();
+        setDragOverIndex(null);
+
+        const course = event.dataTransfer.getData("text/plain");
+        const fromSelected = event.dataTransfer.getData("fromSelected") === "true";
+
+        if (!course) return;
+
+        // Reordering within Selected Courses
+        if (fromSelected && isSelectedArea && dropIndex !== undefined) {
+            const currentIndex = selectedCourses.findIndex(c => c === course);
+            if (currentIndex === -1) return;
+
+            // Create new array without the dragged course
+            const newSelectedCourses = [...selectedCourses];
+            newSelectedCourses.splice(currentIndex, 1);
+
+            // Insert at the new position
+            newSelectedCourses.splice(dropIndex, 0, course);
+            setSelectedCourses(newSelectedCourses);
+        }
+        // Moving from Available to Selected
+        else if (!fromSelected && isSelectedArea) {
+            if (!selectedCourses.includes(course)) {
+                handleCourseSelect(course);
+            }
+        }
+        // Moving from Selected to Available
+        else if (fromSelected && !isSelectedArea) {
+            if (!filteredCourses.includes(course)) {
+                handleCourseRemove(course);
+            }
+        }
+
+        setDraggedCourse(null);
+    };
+
     const validate = () => {
         let newErrors: any = {};
         if (!programName.trim()) newErrors.programName = "Program Name is required";
-        if (!programID.match(/^\d+$#/)) newErrors.programID = "Program ID is should be a number";
+
+        if (!programID.trim()) {
+            newErrors.programID = "Program ID is required";
+        } else if (!/^\d+$/.test(programID)) {
+            newErrors.programID = "Program ID must be a number";
+        } else if (isNaN(Number(programID))) {
+            newErrors.programID = "Invalid number format";
+        }
+
+        if (!description.trim()) newErrors.description = "Description is required";
+
         if (!skillsGain.trim()) newErrors.skillsGain = "Skills Gain is required";
         if (!duration) newErrors.duration = "Duration is required";
 
@@ -57,14 +167,8 @@ const AddProgram = () => {
             date: new Date().toLocaleDateString(),
             org: "KLC Tech College",
             state: active ? "Active" : "Inactive",
-            student: (
-                <button 
-                    className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-                    onClick={() => alert(`Adding student to ${programID}`)}
-                >
-                    Add
-                </button>
-            ),
+            image: imagePreview || undefined,
+            selectedCourses: selectedCourses,
         };
 
         const existingPrograms = JSON.parse(localStorage.getItem("programs") || "[]");
@@ -74,49 +178,53 @@ const AddProgram = () => {
     };
 
     return (
-        <div className="p-6 w-full">
+        <div className="p-2 sm:p-6 w-full max-w-7xl mx-auto">
             <h2 className="text-xl font-bold mb-4">Add Program</h2>
-            <div>
-                <div className="mb-4">
-                    <Label htmlFor="programName">Program Name</Label>
-                    <Input
-                        placeholder="Program Name"
-                        value={programName}
-                        onChange={(e) => setProgramName(e.target.value)}
-                        required
-                    />
-                    {errors.programName && <p className="text-red-500 text-sm">{errors.programName}</p>}
-                </div>
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="programName">Program Name</Label>
+                        <Input
+                            placeholder="Program Name"
+                            value={programName}
+                            onChange={(e) => setProgramName(e.target.value)}
+                            required
+                        />
+                        {errors.programName && <p className="text-red-500 text-sm">{errors.programName}</p>}
+                    </div>
 
-                <div className="mb-4">
-                    <Label htmlFor="programID">Create Program ID</Label>
-                    <Input
-                        placeholder="Create Program ID"
-                        value={programID}
-                        onChange={(e) => setProgramID(e.target.value)}
-                        required
-                    />
-                    {errors.programID && <p className="text-red-500 text-sm">{errors.programID}</p>}
-                </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="programID">Create Program ID</Label>
+                        <Input
+                            placeholder="Create Program ID"
+                            value={programID}
+                            onChange={(e) => setProgramID(e.target.value)}
+                            required
+                        />
+                        {errors.programID && <p className="text-red-500 text-sm">{errors.programID}</p>}
+                    </div>
 
-                <div className="mb-4">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Input placeholder="Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-                </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description </Label>
+                        <Input placeholder="Description " value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-                <div className="my-4">
-                    <Label htmlFor="skillsGain">Skills Gain</Label>
-                    <Input
-                        placeholder="Skills Gain"
-                        value={skillsGain}
-                        onChange={(e) => setSkillsGain(e.target.value)}
-                        required
-                    />
-                    {errors.skillsGain && <p className="text-red-500 text-sm">{errors.skillsGain}</p>}
-                </div>
+                        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
 
-                <div className="flex items-center space-x-6">
-                    <div className="w-1/2">
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="skillsGain">Skills Gain</Label>
+                        <Input
+                            placeholder="Skills Gain"
+                            value={skillsGain}
+                            onChange={(e) => setSkillsGain(e.target.value)}
+                            required
+                        />
+                        {errors.skillsGain && <p className="text-red-500 text-sm">{errors.skillsGain}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="duration">Duration</Label>
                         <Select onValueChange={setDuration}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select Duration" />
@@ -130,19 +238,78 @@ const AddProgram = () => {
                         {errors.duration && <p className="text-red-500 text-sm">{errors.duration}</p>}
                     </div>
 
-                    <div className="flex items-center space-x-4">
-                        <label className="flex items-center space-x-2">
-                            <input type="radio" checked={active} onChange={() => setActive(true)} />
-                            <span>Active</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                            <input type="radio" checked={!active} onChange={() => setActive(false)} />
-                            <span>Inactive</span>
-                        </label>
+                    <div className="space-y-2">
+                        <Label htmlFor="active">Active</Label>
+                        <div className="flex items-center space-x-4">
+                            <label className="flex items-center space-x-2">
+                                <input type="checkbox" checked={active} onChange={() => setActive(true)} />
+                                <span>Active</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                                <input type="checkbox" checked={!active} onChange={() => setActive(false)} />
+                                <span>Inactive</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <CourseSelection />
+                <div className="mt-6">
+                    <h3 className="text-lg font-semibold">Tag Courses</h3>
+                    <div className="flex flex-col md:flex-row gap-4 border p-4 rounded-md">
+                        <div className="w-full md:w-1/2">
+                            <span>Courses to Select</span>
+                            <Input 
+                                placeholder="Search courses..."
+                                className="my-2"
+                            />
+                            <div className="border h-40 sm:h-60 overflow-auto">
+                                {filteredCourses.map((course) => (
+                                    <div
+                                        key={course}
+                                        className="flex justify-between items-center p-2 border-b"
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, course, false)}
+                                    >
+                                        <span>{course}</span>
+                                        <Button variant="ghost" onClick={() => handleCourseSelect(course)}>+</Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="w-full md:w-1/2">
+                            <span>Selected Courses</span>
+                            <p className="text-sm text-gray-500">Drag to arrange the sequence of courses.</p>
+                            <div
+                                className="border h-40 overflow-auto p-2 mt-2"
+                                onDragOver={(e) => handleDragOver(e)}
+                                onDrop={(e) => handleDrop(e, true)}
+                            >
+                                {selectedCourses.length > 0 ? (
+                                    selectedCourses.map((course, index) => (
+                                        <div
+                                            key={course}
+                                            className={`flex justify-between items-center p-2 border-b ${dragOverIndex === index ? 'border-t-2 border-blue-500' : ''
+                                                } ${draggedCourse === course ? 'opacity-50' : ''}`}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, course, true)}
+                                            onDragOver={(e) => handleDragOver(e, index)}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={(e) => handleDrop(e, true, index)}
+                                        >
+                                            <span>{course}</span>
+                                            <Button variant="ghost" onClick={() => handleCourseRemove(course)}>
+                                                <X />
+                                            </Button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500">No courses selected</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="border p-4 rounded-md">
                     <label htmlFor="banner-upload" className="font-semibold block">Banner (Optional)</label>
@@ -153,7 +320,6 @@ const AddProgram = () => {
                 <Button className="bg-blue-600 text-white w-full mt-4" onClick={handleSubmit}>Submit</Button>
             </div>
 
-            {/* Success Popup */}
             {showSuccessPopup && (
                 <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
                     <DialogContent>

@@ -1,12 +1,24 @@
-import React, { useState, DragEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { X,  } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "../components/ui/dialog";
 
-const availableCourses = ["Sunny ", "Bhanu", "Ramu royal", "Sami", "Shankar","Shiva","Pardhu"];
-const defaultSelectedCourses = [" Ali ", "Teja"]; // Add default selected courses here
-const CourseSelection = () => {
+const availableCourses = ["Sunny ", "Bhanu", "Ramu royal", "Sami", "Shankar", "Shiva", "Pardhu"];
+const defaultSelectedCourses: string[] = []; // Changed to empty array initially
+
+interface Student {
+    id: string;
+    name: string;
+    programId: string;
+}
+
+interface AddStudentProps {
+    programId: string;
+    onValidityChange: (isValid: boolean) => void;
+}
+
+const AddStudent = ({ programId, onValidityChange }: AddStudentProps) => {
     const [selectedCourses, setSelectedCourses] = useState<string[]>(defaultSelectedCourses);
     const [filteredCourses, setFilteredCourses] = useState(
         availableCourses.filter(course => !defaultSelectedCourses.includes(course))
@@ -17,40 +29,37 @@ const handleCourseSelect = (course: string) => {
     setFilteredCourses(filteredCourses.filter(c => c !== course));
 };
 
-const handleCourseRemove = (course: string) => {
-    setFilteredCourses([...filteredCourses, course]);
-    setSelectedCourses(selectedCourses.filter(c => c !== course));
-};
+    const handleCourseRemove = (course: string) => {
+        const newSelected = selectedCourses.filter(c => c !== course);
+        setFilteredCourses([...filteredCourses, course]);
+        setSelectedCourses(newSelected);
+        onValidityChange(newSelected.length > 0);
+    };
 
-const handleDragStart = (event: DragEvent<HTMLDivElement>, course: string) => {
-    event.dataTransfer.setData("text/plain", course);
-};
-
-const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-};
-
-const handleDrop = (event: DragEvent<HTMLDivElement>, isAdding: boolean) => {
-    event.preventDefault();
-    const course = event.dataTransfer.getData("text/plain");
-    if (course) {
-        if (isAdding && !selectedCourses.includes(course)) {
-            handleCourseSelect(course);
-        } else if (!isAdding && !filteredCourses.includes(course)) {
-            handleCourseRemove(course);
+    const handleSaveStudents = () => {
+        if (selectedCourses.length === 0) {
+            onValidityChange(false);
+            return;
         }
-    }
-};
 
-// Update filteredCourses based on search input and exclude selected courses
-const handleSearch = (searchTerm: string) => {
-    setFilteredCourses(
-        availableCourses.filter(course =>
-            course.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !selectedCourses.includes(course)
-        )
-    );
-};
+        const studentsToSave = selectedCourses.map(student => ({
+            id: Math.random().toString(36).substr(2, 9),
+            name: student,
+            programId
+        }));
+
+        // Save to localStorage
+        const existingStudents = JSON.parse(localStorage.getItem("students") || "[]");
+        const updatedStudents = [...existingStudents, ...studentsToSave];
+        localStorage.setItem("students", JSON.stringify(updatedStudents));
+
+        onValidityChange(true);
+    };
+
+    useEffect(() => {
+        // Update form validity whenever selected students change
+        onValidityChange(selectedCourses.length > 0);
+    }, [selectedCourses, onValidityChange]);
 
     return (
         <div >
@@ -107,6 +116,9 @@ onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 </div>
 
             </div>
+            {selectedCourses.length === 0 && (
+                <p className="text-red-500 text-sm">Please select at least one student</p>
+            )}
         </div>
     );
 };

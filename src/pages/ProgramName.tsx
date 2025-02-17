@@ -117,9 +117,7 @@ import CourseSelection from "./CourseSelection";
 import { Pencil } from "lucide-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
-
-const images = [img1, img2, img3];
+import CourseSelection from "./CourseSelection";
 
 const courseData = [
     { id: "c1", name: "React Basics", modules: ["Introduction", "Components", "Props & State", "Hooks"] },
@@ -217,7 +215,7 @@ const ProgramDetails = () => {
 
                         {/* Render CourseSelection Component */}
                         <div className="flex-grow overflow-auto">
-                        <CourseSelection   />
+                            <CourseSelection />
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsPopupOpen(false)}>
